@@ -1,0 +1,278 @@
+#include <RFID.h>
+int waittime1=0;
+int waittime2=0;
+int waittime3=4000;
+int waittime4=0;
+float rr1,rr2,rr3,rr4;
+float b1=0,b2=0,b3=0,b4=0;
+#define SDA_DIO1 5
+#define RESET_DIO1 4 
+#define SDA_DIO2 7
+#define RESET_DIO2 6
+#define SDA_DIO3 9
+#define RESET_DIO3 8 
+#define SDA_DIO4 11
+#define RESET_DIO4 10
+
+RFID RC5221(SDA_DIO1, RESET_DIO1);
+RFID RC5222(SDA_DIO2, RESET_DIO2); 
+RFID RC5223(SDA_DIO3, RESET_DIO3); 
+RFID RC5224(SDA_DIO4, RESET_DIO4); 
+
+#define trig1lane1 22
+#define echo1lane1 23
+#define trig2lane1 24
+#define echo2lane1 25
+#define trig3lane1 26
+#define echo3lane1 27
+
+#define trig1lane2 28
+#define echo1lane2 29
+#define trig2lane2 30
+#define echo2lane2 31
+#define trig3lane2 32
+#define echo3lane2 33
+
+#define trig1lane3 34
+#define echo1lane3 35
+#define trig2lane3 36
+#define echo2lane3 37
+#define trig3lane3 38
+#define echo3lane3 39
+
+#define trig1lane4 40
+#define echo1lane4 41
+#define trig2lane4 42
+#define echo2lane4 43
+#define trig3lane4 44
+#define echo3lane4 45
+
+long duration, distance, Sensor1,BackSensor,Sensor3,Sensor2,seconds;
+int c1=0,c2=0,c3=0,c4=0,t=0;
+float green_time=0;
+char lane1[]="Lane1";
+char lane2[]="Lane2";
+char lane3[]="Lane3";
+char lane4[]="Lane4";
+
+
+void setup()
+{
+Serial.begin (9600);
+pinMode(trig1lane1, OUTPUT);
+pinMode(echo1lane1, INPUT);
+pinMode(trig2lane1, OUTPUT);
+pinMode(echo2lane1, INPUT);
+pinMode(trig3lane1, OUTPUT);
+pinMode(echo3lane1, INPUT);
+
+pinMode(trig1lane2, OUTPUT);
+pinMode(echo1lane2, INPUT);
+pinMode(trig2lane2, OUTPUT);
+pinMode(echo2lane2, INPUT);
+pinMode(trig3lane2, OUTPUT);
+pinMode(echo3lane2, INPUT);
+
+pinMode(trig1lane3, OUTPUT);
+pinMode(echo1lane3, INPUT);
+pinMode(trig2lane3, OUTPUT);
+pinMode(echo2lane3, INPUT);
+pinMode(trig3lane3, OUTPUT);
+pinMode(echo3lane3, INPUT);
+
+pinMode(trig1lane4, OUTPUT);
+pinMode(echo1lane4, INPUT);
+pinMode(trig2lane4, OUTPUT);
+pinMode(echo2lane4, INPUT);
+pinMode(trig3lane4, OUTPUT);
+pinMode(echo3lane4, INPUT);
+ 
+SPI.begin(); 
+RC5221.init();
+RC5222.init();
+RC5223.init();
+RC5224.init();
+
+}
+void SonarSensor(int trigPin,int echoPin)
+{
+  digitalWrite(trigPin, LOW);
+  delay(100);
+  digitalWrite(trigPin, HIGH);
+  delay(100);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = (duration*0.034)/2;
+}
+void scheduler(){
+  rr1=(b1+waittime1)/b1;
+  rr2=(b2+waittime2)/b2;
+  rr3=(b3+waittime3)/b3;
+  rr4=(b4+waittime4)/b4;
+ // Serial.println(rr1);
+  if(rr1>=rr2 && rr1>=rr3 && rr1>=rr4){
+    Serial.println("Lane1 is opened");
+    Serial.println("Open_time");
+    Serial.print(b1);
+    waittime1=0;
+    waittime2=waittime2+b1;
+    waittime3=waittime3+b1;
+    waittime4=waittime4+b1;
+  }
+  if(rr2>rr1 && rr2>=rr3 && rr2>=rr4){
+    Serial.println("Lane2 is opened");
+    Serial.println("Open_time");
+    Serial.print(b2);
+    waittime2=0;
+    waittime1=waittime1+b2;
+    waittime3=waittime3+b2;
+    waittime4=waittime4+b2;
+  }
+  if(rr3>rr2 && rr3>rr1 && rr3>=rr4){
+    Serial.println("Lane3 is opened");
+    Serial.println("Open_time");
+    Serial.print(b3);
+    waittime3=0;
+    waittime2=waittime2+b3;
+    waittime1=waittime1+b3;
+    waittime4=waittime4+b3;
+  }
+  if(rr4>rr2 && rr4>rr3 && rr4>rr1){
+    Serial.println("Lane4 is opened");
+    Serial.println("Open_time");
+    Serial.print(b4);
+    waittime4=0;
+    waittime2=waittime2+b4;
+    waittime3=waittime3+b4;
+    waittime1=waittime1+b4;
+  }
+}
+int compute_bursttime(int SDA_DIO,int RESET_DIO){
+  float greentime=0;
+  if(Sensor1<10&&Sensor2<10&&Sensor3<10)
+  {
+    t=3;
+
+  }
+  else if(Sensor1<10&&Sensor2<10)
+  {
+    t=2;
+  }
+  else
+  {
+    t=1;
+  }
+    /*  Serial.println(t);
+  Serial.print("Sensor1  ");
+  Serial.print(Sensor1);
+  Serial.println();
+  Serial.print("Sensor2  "); 
+  Serial.print(Sensor2);
+  Serial.println();
+  Serial.print("Sensor3  ");
+  Serial.print(Sensor3);
+  Serial.println();*/
+  if(SDA_DIO==5)
+  {
+    //Serial.print("Lane1 No of prioritized vehicles: ");
+  //  c1++;
+    greentime=t*2000+c1*3000;
+    //Serial.print(c1);
+  }
+  else if(SDA_DIO==7)
+  {
+  //  Serial.print("Lane2 No of prioritized vehicles: ");
+    //c2++;
+    //Serial.print(c2);
+    greentime=t*2000+c2*3000;
+  }
+  else if(SDA_DIO==9)
+  {
+    //Serial.print("Lane3 No of prioritized vehicles: ");
+    //c3++;
+    //Serial.print(c3);
+    greentime=t*2000+c3*3000;
+  }
+  else if(SDA_DIO==11)
+  {
+    //Serial.print("Lane4 No of prioritized vehicles: ");
+    //c4++;
+    //Serial.print(c4);
+    greentime=t*2000+c4*3000;
+  }
+  Serial.println();
+  return greentime;
+ // Serial.println();
+}
+void loop() {
+ 
+PerLaneVehicles(trig1lane1,echo1lane1,trig2lane1,echo2lane1,trig3lane1,echo3lane1,lane1,SDA_DIO1,RESET_DIO1);
+b1=compute_bursttime(SDA_DIO1,RESET_DIO1);
+PerLaneVehicles(trig1lane2,echo1lane2,trig2lane2,echo2lane2,trig3lane2,echo3lane2,lane2,SDA_DIO2,RESET_DIO2);
+b2=compute_bursttime(SDA_DIO2,RESET_DIO2);
+PerLaneVehicles(trig1lane3,echo1lane3,trig2lane3,echo2lane3,trig3lane3,echo3lane3,lane3,SDA_DIO3,RESET_DIO3);
+b3=compute_bursttime(SDA_DIO3,RESET_DIO3);
+PerLaneVehicles(trig1lane4,echo1lane4,trig2lane4,echo2lane4,trig3lane4,echo3lane4,lane4,SDA_DIO4,RESET_DIO4);
+b4=compute_bursttime(SDA_DIO4,RESET_DIO4);
+scheduler();
+Serial.println("Waittime ");
+Serial.println(waittime1);
+Serial.println(waittime2);
+Serial.println(waittime3);
+Serial.println(waittime4);
+//green_time=0;
+c1=0;c2=0;c3=0;c4=0;
+
+/*Serial.println("No of tags detected...");
+    Serial.print(c);
+    Serial.println();
+    Serial.println();
+*/
+//delay(100);
+    
+}
+
+
+
+void PerLaneVehicles(int trig1,int echo1,int trig2,int echo2,int trig3,int echo3,char lane[],int SDA_DIO,int RESET_DIO)
+{
+
+SonarSensor(trig1, echo1);
+Sensor1 = distance;
+SonarSensor(trig2, echo2);
+Sensor2 = distance;
+SonarSensor(trig3, echo3);
+Sensor3 = distance;
+
+
+if (RC5221.isCard())
+  {
+    /* If so then get its serial number */
+  c1++;
+   }
+  if (RC5222.isCard())
+  {
+    /* If so then get its serial number */
+    c2++;
+   }
+  if (RC5223.isCard())
+  {
+    /* If so then get its serial number */
+    c3++;
+  } 
+  if (RC5224.isCard())
+  {
+    /* If so then get its serial number */
+    c4++;
+  }
+  
+
+/*Serial.print(lane);
+Serial.print(": ");
+delay(3);
+Serial.print("Green signal time...");
+Serial.print(green_time);
+delay(green_time);
+Serial.println();
+Serial.println();*/
+}
